@@ -3,26 +3,27 @@ import sys
 import requests
 import time
 import random as rng
+from datetime import datetime
 
 clear = lambda: os.system('cls')
 clear()
-bn = "b260525"
+bn = "b050526"
 title = f"CC {bn}"
-build = f"Complex Cat - A SimpleMMO Companion Applet {bn}"
+build = f"Complex Cat - A SimpleMMO Companion Applet {bn}\n"
 os.system(f'title,{title}')
 print(f"Welcome to {build}\nWe hope to help you play smarter.\n\nIn order to use this applet, be sure that you are: \n- Logged in on the Web App [https://web.simple-mmo.com/] \n- and have access to the API features.\n\nGet your API Key from the link below:\n[ https://web.simple-mmo.com/p-api/home ]" )
 api_input = input()
 api_key = api_input
 clear()
 
-current_time = time.gmtime()
+current_time = time.localtime()
 time_int = time.time()
 formatted_time = time.strftime("%A, %d %B, %Y | %X", current_time)
 
 
 notice = f"⚠️ | You may risk suspension of your API token, if you navigate this program too fast.\nCurrent rules for API use is 40 calls per minute.\n\n⚠️ | Accessing Guild Features, without a guild, may crash the program."
 nf = "{:,}"
-command_menu = "Application Menu:\n1. Information (New? Read this first)\n\nGuild Features:\n2. Leaderboard (2 API calls)n\n3. In-depth Guild View (3 API calls)\n4. Guild Difference Calculator (3 API calls)\n\nPlayer Features (no guild):\n5. Player Data View (1 API calls)\n6. Personal Data View (Statistics) (1 API call)\n7. Cheapest Diamond Listing (2 API calls)\n8. Battle Arena Gold Requirements (1 API call)\n9. Skilling Average Calculator (1 API call)\n10. Sprint Time Calculator (0 API calls)\n\n0. Quit"
+command_menu = "Application Menu:\n1. Information (New? Read this first)\n\nGuild Features:\n2. Leaderboard (2 API calls)n\n3. In-depth Guild View (3 API calls)\n4. Guild Difference Calculator (3 API calls)\n\nPlayer Features (no guild):\n5. Player Data View (1 API calls)\n6. Personal Data View (Statistics) (1 API call)\n7. Cheapest Diamond Listing (2 API calls)\n8. Battle Arena Gold Requirements (1 API call)\n9. World Boss Activation Time Display (1 API Call)\n10. Skilling Average Calculator (1 API call)\n11. Sprint Time Calculator (0 API calls)\n\n0. Quit"
 warn_menu = "⚠️ | Press 0 to pass this step."
 def information():
     print(build)
@@ -120,6 +121,7 @@ def guild_specific(gs_id):
     gs_ownerid = gs_response.json()['owner']
     gs_exp = gs_response.json()['current_season_exp']
     gs_war = gs_response.json()['eligible_for_guild_war']
+
     print(f"In-depth Guild view for: {gs_name}\n")
     
     for i in range (gs_membercount):
@@ -190,7 +192,7 @@ def guild_specific(gs_id):
                 member_inactive = gsx_response.json()[i]['last_activity']
                 current_time = time.time()
                 days_inactive1 = current_time-member_inactive
-                days_inactive2 = days_inactive1/86400
+                days_inactive2 = days_inactive1/86400 # refactor to check for 5 minutes only, not 24hrs
                 days_inactive_int = int(days_inactive2)
                 days_inactive_readable = str
                 if days_inactive_int == 0:
@@ -505,7 +507,7 @@ def sprinttimer():
     clear()
     print(build)
     currentTimeUnix = time.time()
-    currentTimeGMTime = time.gmtime(currentTimeUnix)
+    currentTimeGMTime = time.localtime(currentTimeUnix)
     currentGMT = time.strftime("%A, %d %B, %Y | %X", currentTimeGMTime)
     print(f"\nCurrent time: {currentGMT}")
 
@@ -528,6 +530,62 @@ def sprinttimer():
     print(f'\n{command_menu}')
     command = int(input())
     menu(command)
+
+def worldBossDisplay():
+    current_time = time.localtime()
+    formatted_time = time.strftime("%A, %d %B, %Y | %X", current_time)
+    start_time = formatted_time
+
+    worldboss_endpoint = f'https://api.simple-mmo.com/v1/worldboss/all?api_key={api_key}'
+    worldboss_response = requests.post(worldboss_endpoint)
+
+    worldboss_output = worldboss_response.json()
+    worldboss_sort = sorted(worldboss_output, key=lambda x: x['enable_time'])
+
+    worldboss1_name = worldboss_sort[0]['name']
+    worldboss1_god = worldboss_sort[0]['god']
+    worldboss1_time = worldboss_sort[0]['enable_time']
+
+    wbt1_int = worldboss1_time
+    rd1 = datetime.fromtimestamp(wbt1_int)
+
+    if worldboss1_god == 0:
+        god1_readable = "No"
+    else:
+        god1_readable = "Yes"
+
+    worldboss2_name = worldboss_sort[1]['name']
+    worldboss2_god = worldboss_sort[1]['god']
+    worldboss2_time = worldboss_sort[1]['enable_time']
+
+    wbt2_int = worldboss2_time
+    rd2 = datetime.fromtimestamp(wbt2_int)
+
+    if worldboss2_god == 0:
+        god2_readable = "No"
+    else:
+        god2_readable = "Yes"
+
+    worldboss3_name = worldboss_sort[2]['name']
+    worldboss3_god = worldboss_sort[2]['god']
+    worldboss3_time = worldboss_sort[2]['enable_time']
+
+    wbt3_int = worldboss3_time
+    rd3 = datetime.fromtimestamp(wbt3_int)
+
+    if worldboss3_god == 0:
+        god3_readable = "No"
+    else:
+        god3_readable = "Yes"
+
+    print(f"Next World Boss:\nActivation Time: {rd1.strftime('%A, %d %B, %Y | %X')}\nName: {worldboss1_name}\nIs a god?: {god1_readable}\n")
+    print(f"Upcoming World Bosses:\nActivation Time:  {rd2.strftime('%A, %d %B, %Y | %X')}\nName: {worldboss2_name}\nIs a god?: {god2_readable}\n")
+    print(f"Activation Time: {rd3.strftime('%A, %d %B, %Y | %X')}\nName: {worldboss3_name}\nIs a god?: {god3_readable}\n")
+
+    print(command_menu)
+    command = int(input())
+    menu(command)
+
 def menu(command):
     clear()
     match command:
@@ -596,8 +654,12 @@ def menu(command):
         case 9:
             clear()
             print(build)
-            skillingcalc()
+            worldBossDisplay()
         case 10:
+            clear()
+            print(build)
+            skillingcalc()
+        case 11:
             clear()
             print(build)
             sprinttimer()
